@@ -590,16 +590,19 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
   }
   /* ── MODAL: DARK THEME (independent of page light theme) ── */
   .modal-content {
-    background: #0f0f1a !important; width: 92%; max-width: 820px;
+    background: rgba(18, 18, 32, 0.72) !important;
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    width: 92%; max-width: 820px;
     max-height: 88vh; border-radius: 22px;
-    border: 1px solid #252538; padding: 0;
+    border: 1px solid rgba(255,255,255,0.08); padding: 0;
     display: flex; flex-direction: column;
-    box-shadow: 0 30px 90px rgba(0,0,0,0.85); overflow: hidden;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.5); overflow: hidden;
   }
   .modal-header {
-    padding: 20px 26px; border-bottom: 1px solid #252538;
+    padding: 20px 26px; border-bottom: 1px solid rgba(255,255,255,0.07);
     display: flex; justify-content: space-between; align-items: center;
-    background: rgba(99,102,241,0.08) !important;
+    background: rgba(99,102,241,0.1) !important;
   }
   .modal-header h3 { color: #e8e8f8; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
   .close-btn {
@@ -611,8 +614,8 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
   .close-btn:hover { background: rgba(255,255,255,0.13); color: #e8e8f8; }
   .modal-body {
     padding: 24px 26px; overflow-y: auto;
-    background: #0f0f1a !important;
-    scrollbar-width: thin; scrollbar-color: #2a2a42 transparent;
+    background: transparent !important;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent;
   }
   .modal-body::-webkit-scrollbar { width: 5px; }
   .modal-body::-webkit-scrollbar-track { background: transparent; }
@@ -624,23 +627,23 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
 
   /* ── PRICING TABLE (dark) ──────────────────────────── */
   .pricing-table { width: 100%; border-collapse: collapse; margin: 10px 0 22px; font-size: 0.81rem; }
-  .pricing-table th { background: rgba(255,255,255,0.04); color: #7878a0; text-align: left; padding: 9px 14px; font-weight: 700; border-bottom: 1px solid #22223a; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
-  .pricing-table td { padding: 10px 14px; border-bottom: 1px solid #1e1e32; color: #8888aa; vertical-align: top; line-height: 1.5; }
+  .pricing-table th { background: rgba(255,255,255,0.05); color: #9090b8; text-align: left; padding: 9px 14px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pricing-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); color: #8888aa; vertical-align: top; line-height: 1.5; }
   .pricing-table tr:last-child td { border-bottom: none; }
   .pricing-table td:first-child { color: #e8e8f8; font-weight: 600; white-space: nowrap; }
   .pricing-table .rate { color: #fbbf24; font-family: 'Courier New', monospace; font-size: 0.77rem; display: block; margin-top: 2px; }
 
   /* ── MODAL SECTION HEADINGS (dark) ────────────────── */
-  .modal-section { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #818cf8; margin: 24px 0 10px; padding-bottom: 7px; border-bottom: 1px solid #22223a; }
+  .modal-section { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #818cf8; margin: 24px 0 10px; padding-bottom: 7px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 
   /* ── PARAM LIST (dark) ─────────────────────────────── */
   .param-list { list-style: none; padding: 0; margin-bottom: 20px; }
-  .param-list li { font-size: 0.86rem; color: #8888aa; padding: 8px 0; border-bottom: 1px solid #1e1e32; line-height: 1.55; }
+  .param-list li { font-size: 0.86rem; color: #8888aa; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); line-height: 1.55; }
   .param-list li:last-child { border-bottom: none; }
   .param-list strong { color: #a5b4fc; font-weight: 600; font-family: 'Courier New', monospace; font-size: 0.84em; }
 
   /* ── CODE BLOCKS (dark) ────────────────────────────── */
-  .code-wrapper { position: relative; margin: 12px 0 18px; border: 1px solid #22223a; border-radius: 11px; overflow: hidden; background: #0d0d18; }
+  .code-wrapper { position: relative; margin: 12px 0 18px; border: 1px solid rgba(255,255,255,0.08); border-radius: 11px; overflow: hidden; background: rgba(0,0,0,0.25); }
   .copy-btn { position: absolute; top: 9px; right: 9px; width: 29px; height: 29px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08); color: #7878a0; border-radius: 7px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s; z-index: 10; }
   .copy-btn:hover { background: rgba(255,255,255,0.14); color: #e8e8f8; }
   pre { margin: 0; padding: 20px 22px; overflow-x: auto; }
