@@ -1,169 +1,211 @@
-# 🎨 Free AI Image Generator (Host ion Cloudflare Worker)
+# Free AI Image Generator — Host on Cloudflare Worker
 
-A serverless, full-stack AI Image Generator running entirely on **Cloudflare Workers**. It utilizes **Cloudflare Workers AI** (Black Forest Labs Flux Models) for generation and **Cloudflare KV** for tracking daily neuron usage and enforcing limits.
-
-## ✨ Features
-
-* **Serverless Architecture:** Runs on Cloudflare Edge (Workers).
-* **Dual Model Support:**
-    * `Flux-2 Klein 4B` (High Quality, ~20 steps).
-    * `Flux-1 Schnell` (Fast Generation, ~4 steps).
-* **Precise Usage Tracking:** Real-time tracking of "Neurons" used per image, matched exactly to Cloudflare's billing calculation.
-* **Daily Limit Enforcement:** Automatically blocks requests (HTTP 429) if the daily limit (default: 10,000 neurons) is exceeded.
-* **Total Image Counter:** Tracks the total number of images generated across the lifetime of the database.
-* **Secure API:** Protected via `X-API-KEY` header authentication.
-* **Responsive UI:** Built-in Dark Mode HTML/JS interface with:
-    * Real-time progress bars.
-    * Countdown timer to UTC midnight reset.
-    * "Photorealistic" prompt enhancer.
-    * Custom dimension controls.
-    * Direct download button.
+A serverless, full-stack AI Image Generator running entirely on **Cloudflare Workers**. Uses **Cloudflare Workers AI** (Black Forest Labs Flux models) for generation and **Cloudflare KV** to track daily neuron usage and enforce limits — no external services required.
 
 ---
 
-## 🛠️ Prerequisites
+## Features
 
-1.  A **Cloudflare Account** (Free tier works, but AI usage limits apply).
-2.  **Node.js** and **npm** installed locally.
-3.  **Wrangler CLI** installed (`npm install -g wrangler`).
+- **Three AI Models:**
+  - `Flux-2 Klein 4B` — High quality, tile-based billing (default)
+  - `Flux-2 Klein 9B` — Highest quality, megapixel-based billing (launched Jan 2026)
+  - `Flux-1 Schnell` — Fastest generation, step + tile billing
+- **100% Accurate Neuron Tracking:** Mirrors Cloudflare's exact billing formulas per model so your internal counter matches the Cloudflare console.
+- **Daily Limit Enforcement:** Blocks requests with HTTP 429 once the neuron budget is exhausted. Resets at UTC midnight.
+- **Live Cost Estimator:** UI shows estimated neuron cost for the selected model and dimensions before you generate.
+- **Secure API:** `X-API-KEY` header authentication.
+- **Built-in UI:** Dark mode responsive interface with:
+  - Real-time neuron usage bar and countdown timer
+  - Live cost estimate per model/dimension
+  - Photorealistic prompt enhancer
+  - Custom dimension controls (32px steps, 256–1280px)
+  - One-click download button
+- **Built-in API Docs:** In-app modal with full pricing table, parameter reference, and cURL examples.
 
 ---
 
-## 🚀 Setup & Deployment
+## Prerequisites
 
-### 1. Initialize Project
-Create a new directory and initialize a Cloudflare Worker:
+1. A **Cloudflare account** (free tier works; AI neuron limits apply).
+2. **Node.js** and **npm** installed locally.
+3. **Wrangler CLI**: `npm install -g wrangler`
+
+---
+
+## Setup & Deployment
+
+### 1. Create a new Worker project
+
 ```bash
 wrangler init ai-image-generator
-# Select "Hello World" (ES module) when asked
+# Select "Hello World" (ES module) when prompted
 cd ai-image-generator
 ```
 
-### 2. Create KV Namespace
-You need a KV database to store the usage stats. Run this command:
+### 2. Create a KV namespace for usage tracking
+
 ```bash
 wrangler kv:namespace create "USAGE_DB"
 ```
-*Copy the `id` output from this command. You will need it for step 3.*
+
+Copy the `id` from the output — you need it in the next step.
 
 ### 3. Configure `wrangler.toml`
-Replace the contents of your `wrangler.toml` file with the configuration below. **Replace `{YOUR_KV_ID_HERE}` with the ID you copied in Step 2.**
 
 ```toml
 name = "ai-image-generator"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 
-# Bind Workers AI
 [ai]
 binding = "AI"
 
-# Bind KV Namespace for Stats
 [[kv_namespaces]]
 binding = "USAGE_DB"
-id = "{YOUR_KV_ID_HERE}"
+id = "YOUR_KV_ID_HERE"
 ```
 
-### 4. Set the API Key
-Securely store your desired API key (password) using Wrangler secrets. Do not hardcode this in the file.
+### 4. Set the API key secret
+
 ```bash
 wrangler secret put API_KEY
-# Enter your desired password when prompted (e.g., "super-secret-password")
+# Enter your desired password when prompted
 ```
 
-### 5. Add the Application Code
-Copy the provided **golden version** JavaScript code into `src/index.js`.
+### 5. Copy the worker code
+
+Copy `ai-image-worker.js` into `src/index.js`.
 
 ### 6. Deploy
-Deploy your worker to the Cloudflare global network:
+
 ```bash
 wrangler deploy
 ```
-*You will receive a URL (e.g., `https://ai-image-generator.yourname.workers.dev`).*
+
+You'll receive a URL like `https://ai-image-generator.yourname.workers.dev`.
 
 ---
 
-## ⚙️ Configuration (Inside `src/index.js`)
+## Configuration
 
-You can modify these constants at the top of the `src/index.js` file to tune the application:
+Edit these constants near the top of `src/index.js`:
 
 | Constant | Default | Description |
-| :--- | :--- | :--- |
+|:---|:---|:---|
 | `ENFORCE_AUTH` | `true` | Set to `false` to make the API public (not recommended). |
-| `DAILY_LIMIT` | `10000` | The max Neurons allowed per day (matches CF Free Tier). |
-| `MAX_SIZE` | `1280` | Maximum pixel width/height allowed. |
-| `MODELS` | Object | Map of model names to Cloudflare Model IDs. |
+| `DAILY_LIMIT` | `10000` | Max neurons per day (matches Cloudflare free tier). |
+| `MAX_SIZE` | `1280` | Maximum pixel width or height. |
+| `MIN_SIZE` | `256` | Minimum pixel width or height. |
+| `SIZE_STEP` | `32` | Dimensions must be multiples of this value. |
+| `MODELS` | Object | Map of short names to full Cloudflare model IDs. |
 
 ---
 
-## 🔌 API Documentation
+## API Reference
 
-You can use the backend programmatically without the UI.
+**Endpoint:** `POST /generate`  
+**Headers:** `Content-Type: application/json`, `X-API-KEY: <your-key>`
 
-**Base URL:** `https://<your-worker-url>/generate`
-**Method:** `POST`
-**Headers:**
-* `Content-Type`: `application/json`
-* `X-API-KEY`: `Your-Secret-Key`
+### Request body
 
-### Request Body
 ```json
 {
   "prompt": "A cyberpunk street at night, neon lights",
+  "model": "flux-2-klein-4b",
   "width": 1024,
   "height": 576,
-  "model": "flux-2-klein-4b", 
   "photorealistic": true,
-  "seed": 12345,
+  "seed": 42,
   "safety_tolerance": 2
 }
 ```
-* **model:** Options are `flux-2-klein-4b` or `flux-1-schnell`.
-* **photorealistic:** If `true`, appends quality-boosting keywords to the prompt.
-* **seed:** (Optional) Integer for reproducibility.
-* **safety_tolerance:** (Optional) Integer 1-3.
 
-### Response Example
+| Field | Type | Default | Notes |
+|:---|:---|:---|:---|
+| `prompt` | string | — | **Required.** |
+| `model` | string | `flux-2-klein-4b` | `flux-2-klein-4b` · `flux-2-klein-9b` · `flux-1-schnell` |
+| `width` | integer | `768` | 256–1280, multiple of 32 |
+| `height` | integer | `768` | 256–1280, multiple of 32 |
+| `photorealistic` | boolean | `false` | Appends quality keywords to the prompt |
+| `seed` | integer | random | Fixed seed for reproducible results |
+| `safety_tolerance` | integer | — | `1` Strict · `2` Medium · `3` Loose |
+
+### Response
+
 ```json
 {
   "success": true,
   "modelUsed": "@cf/black-forest-labs/flux-2-klein-4b",
   "extension": "png",
-  "costNeurons": 74.25,
+  "costNeurons": 58.61,
   "imageData": "data:image/png;base64,iVBORw0KGgo..."
+}
+```
+
+### Stats endpoint
+
+`GET /stats` — Returns current daily usage (no auth required).
+
+```json
+{
+  "neurons": 1842.30,
+  "count": 18,
+  "limit": 10000,
+  "db_connected": true
 }
 ```
 
 ---
 
-## 💰 Neuron Pricing Logic
+## Neuron Pricing
 
-This worker calculates cost exactly as Cloudflare documents to ensure your internal tracker matches the Cloudflare console.
+Costs mirror [Cloudflare's official pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/) exactly. 1 neuron ≈ $0.000011.
 
-1.  **Flux-1 Schnell:**
-    * Cost = `(Steps * 9.6) + (Tiles * 4.8)`
-    * *Note: Tiles are calculated as (Width * Height) / (512 * 512).*
-2.  **Flux-2 Klein:**
-    * Cost = `Tiles * 26.05`
+### Flux-1 Schnell
+
+```
+Cost = (steps × 9.6) + (tiles × 4.8)
+```
+- `tiles` = (width × height) / (512 × 512)
+- Default steps = 4
+- Example — 768×768: `(4 × 9.6) + (2.25 × 4.8)` = **49.2 neurons**
+
+### Flux-2 Klein 4B
+
+```
+Cost = tiles × 26.05
+```
+- Example — 768×768: `2.25 × 26.05` = **~58.6 neurons**
+
+### Flux-2 Klein 9B
+
+```
+Cost = (min(mp, 1) × 1363.64) + (max(0, mp − 1) × 181.82)
+```
+- `mp` = (width × height) / 1,000,000 (output megapixels)
+- First megapixel: **1363.64 neurons/MP**
+- Each additional megapixel: **181.82 neurons/MP**
+- Example — 768×768 (0.59 MP): **~804 neurons**
+- Example — 1024×1024 (1.0 MP): **1363.64 neurons**
+
+> **Note:** The 9B model is significantly more expensive than 4B. At the default 10,000 neuron daily limit you'll get roughly 7–12 images at typical resolutions.
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-**1. "Database Not Connected" Error in UI**
-* **Cause:** The KV binding is missing or incorrect.
-* **Fix:** Ensure your `wrangler.toml` has the correct `[[kv_namespaces]]` block and ID. Redeploy using `wrangler deploy`.
+**"Database Not Connected" in the UI**  
+Ensure `wrangler.toml` has the correct `[[kv_namespaces]]` block and ID. Redeploy with `wrangler deploy`.
 
-**2. 403 Unauthorized Error**
-* **Cause:** Incorrect API Key.
-* **Fix:** Ensure the key entered in the UI matches the one you set via `wrangler secret put API_KEY`.
+**403 Unauthorized**  
+The key in the UI must match what you set via `wrangler secret put API_KEY`.
 
-**3. Stats not updating immediately**
-* **Fix:** Ensure you are using the latest code version where `await env.USAGE_DB.put(...)` is used instead of `ctx.waitUntil`.
+**HTTP 429 Daily Limit Reached**  
+The neuron budget for today is exhausted. It resets at UTC midnight, or raise `DAILY_LIMIT` in `src/index.js`.
 
 ---
 
-## 📜 License
+## License
 
-This project is open-source.
-**Footer:** TechnoChat.IN™ | © iAmSAugata
+MIT — open source. See `LICENSE`.  
+**Footer:** TechnoChat.IN™ | © iAmSaugata
