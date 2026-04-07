@@ -473,15 +473,32 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
   .two-col { display: flex; gap: 12px; }
   .two-col > div { flex: 1; }
 
-  /* ── CHECKBOX ──────────────────────────────────────── */
-  .checkbox-row {
-    display: flex; align-items: center; gap: 10px;
-    margin-top: 14px; padding: 10px 13px;
+  /* ── TOGGLE SWITCH ─────────────────────────────────── */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 14px; padding: 11px 14px;
     background: rgba(85,88,232,0.03);
     border: 1px solid var(--border); border-radius: 9px; cursor: pointer;
+    user-select: none;
   }
-  .checkbox-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-  .checkbox-row label { font-size: 0.82rem; color: var(--text-m); cursor: pointer; line-height: 1.4; }
+  .toggle-row label { font-size: 0.82rem; color: var(--text-m); cursor: pointer; line-height: 1.4; flex: 1; }
+  .toggle-track {
+    flex-shrink: 0; width: 38px; height: 21px;
+    background: #d1d5db; border-radius: 11px;
+    position: relative; transition: background 0.22s; cursor: pointer;
+  }
+  .toggle-track::after {
+    content: ''; position: absolute;
+    top: 3px; left: 3px;
+    width: 15px; height: 15px;
+    background: #fff; border-radius: 50%;
+    transition: transform 0.22s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  input#photoreal { display: none; }
+  input#photoreal:checked ~ .toggle-row .toggle-track,
+  input#photoreal:checked + .toggle-row .toggle-track { background: var(--accent); }
+  .toggle-row.active .toggle-track { background: var(--accent); }
+  .toggle-row.active .toggle-track::after { transform: translateX(17px); }
 
   /* ── ERROR ─────────────────────────────────────────── */
   #error-box {
@@ -698,11 +715,28 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
     <div class="field">
       <label class="field-label" for="aspectRatio">Dimensions</label>
       <select id="aspectRatio" onchange="updateDims(); estimateCost();">
-        <option value="1:1" selected>1:1 &nbsp; Square &nbsp;(768 × 768)</option>
-        <option value="16:9">16:9 &nbsp; Landscape &nbsp;(1152 × 640)</option>
-        <option value="9:16">9:16 &nbsp; Portrait &nbsp;(640 × 1152)</option>
-        <option value="21:9">21:9 &nbsp; Ultrawide &nbsp;(1280 × 576)</option>
-        <option value="custom">Custom</option>
+        <optgroup label="Square">
+          <option value="1:1-sm">1:1 &nbsp; Small &nbsp;(512 × 512)</option>
+          <option value="1:1" selected>1:1 &nbsp; Medium &nbsp;(768 × 768)</option>
+          <option value="1:1-lg">1:1 &nbsp; Large &nbsp;(1024 × 1024)</option>
+        </optgroup>
+        <optgroup label="Landscape">
+          <option value="16:9-sm">16:9 &nbsp; HD &nbsp;(896 × 512)</option>
+          <option value="16:9">16:9 &nbsp; Wide &nbsp;(1152 × 640)</option>
+          <option value="16:9-lg">16:9 &nbsp; Full HD &nbsp;(1280 × 720)</option>
+          <option value="4:3">4:3 &nbsp; Classic &nbsp;(1024 × 768)</option>
+          <option value="3:2">3:2 &nbsp; Photo &nbsp;(1152 × 768)</option>
+          <option value="21:9">21:9 &nbsp; Ultrawide &nbsp;(1280 × 576)</option>
+        </optgroup>
+        <optgroup label="Portrait">
+          <option value="9:16-sm">9:16 &nbsp; Short &nbsp;(512 × 896)</option>
+          <option value="9:16">9:16 &nbsp; Story &nbsp;(640 × 1152)</option>
+          <option value="2:3">2:3 &nbsp; Photo &nbsp;(768 × 1152)</option>
+          <option value="3:4">3:4 &nbsp; Classic &nbsp;(768 × 1024)</option>
+        </optgroup>
+        <optgroup label="Custom">
+          <option value="custom">Custom dimensions</option>
+        </optgroup>
       </select>
     </div>
 
@@ -731,9 +765,10 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
             </select>
           </div>
         </div>
-        <div class="checkbox-row" onclick="document.getElementById('photoreal').click()">
-          <input type="checkbox" id="photoreal" onclick="event.stopPropagation()" />
-          <label for="photoreal">Photorealistic Enhancer — appends quality keywords to prompt</label>
+        <input type="checkbox" id="photoreal" />
+        <div class="toggle-row" id="toggleRow" onclick="togglePhotoreal()">
+          <label>Photorealistic Enhancer — appends quality keywords to prompt</label>
+          <div class="toggle-track" id="toggleTrack"></div>
         </div>
       </div>
     </details>
@@ -893,13 +928,12 @@ function estimateCost() {
   const model = document.getElementById('model').value;
   const ar    = document.getElementById('aspectRatio').value;
 
-  let w = 768, h = 768;
-  if      (ar === '16:9')   { w = 1152; h = 640;  }
-  else if (ar === '9:16')   { w = 640;  h = 1152; }
-  else if (ar === '21:9')   { w = 1280; h = 576;  }
-  else if (ar === 'custom') {
+  let w, h;
+  if (ar === 'custom') {
     w = parseInt(document.getElementById('width').value)  || 768;
     h = parseInt(document.getElementById('height').value) || 768;
+  } else {
+    [w, h] = DIMS[ar] || [768, 768];
   }
 
   const STEP = 32;
@@ -927,24 +961,36 @@ function estimateCost() {
   if (descEl) descEl.innerText = MODEL_DESCRIPTIONS[model] || '';
 }
 
-function updateDims() {
-  const r = document.getElementById('aspectRatio').value;
-  const dimDiv = document.getElementById('dims');
-  const wSelect = document.getElementById('width');
-  const hSelect = document.getElementById('height');
+const DIMS = {
+  '1:1-sm':  [512,  512],  '1:1':     [768,  768],  '1:1-lg':  [1024, 1024],
+  '16:9-sm': [896,  512],  '16:9':    [1152, 640],  '16:9-lg': [1280, 720],
+  '4:3':     [1024, 768],  '3:2':     [1152, 768],  '21:9':    [1280, 576],
+  '9:16-sm': [512,  896],  '9:16':    [640,  1152], '2:3':     [768,  1152],
+  '3:4':     [768,  1024],
+};
 
-  let w = 768, h = 768;
-  if (r === '16:9') { w=1152; h=640; }
-  else if (r === '9:16') { w=640; h=1152; }
-  else if (r === '21:9') { w=1280; h=576; }
+function updateDims() {
+  const r      = document.getElementById('aspectRatio').value;
+  const dimDiv = document.getElementById('dims');
+  const wSel   = document.getElementById('width');
+  const hSel   = document.getElementById('height');
 
   if (r === 'custom') {
     dimDiv.style.display = 'block';
   } else {
     dimDiv.style.display = 'none';
-    wSelect.value = w;
-    hSelect.value = h;
+    const [w, h] = DIMS[r] || [768, 768];
+    wSel.value = w; hSel.value = h;
   }
+}
+
+function togglePhotoreal() {
+  const cb    = document.getElementById('photoreal');
+  const row   = document.getElementById('toggleRow');
+  const track = document.getElementById('toggleTrack');
+  cb.checked  = !cb.checked;
+  row.classList.toggle('active', cb.checked);
+  track.classList.toggle('active', cb.checked);
 }
 
 // Modal Functions
