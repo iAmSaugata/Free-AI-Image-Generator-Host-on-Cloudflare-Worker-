@@ -266,24 +266,21 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
   let statusHtml = "";
   if(dbConnected) {
       statusHtml = `
-      <div style="flex:1">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.85rem;">
-            <span>Used: <strong id="usage-val" style="color:#fff">${usedFormatted}</strong> Neurons</span>
-            <span>Reset in: <strong id="reset-timer" style="color:#a1a1aa; font-family:monospace;">Calculating...</strong></span>
+      <div class="usage-badge">
+        <div class="usage-row">
+          <span>Neurons Used: <strong id="usage-val">${usedFormatted}</strong></span>
+          <span id="reset-timer" class="reset-timer">--:--:--</span>
         </div>
-        <div style="width:100%; height:6px; background:#333; border-radius:3px; overflow:hidden;">
-            <div id="usage-bar" style="width:${pct}%; height:100%; background:linear-gradient(90deg, #6366f1, #ec4899); transition: width 0.5s ease;"></div>
+        <div class="usage-track">
+          <div id="usage-bar" class="usage-fill" style="width:${pct}%"></div>
         </div>
-        <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:0.75rem; opacity:0.7;">
-            <span>Total Images: <strong id="img-count" style="color:#fff">${imgCount || 0}</strong></span>
-            <span>Remaining: <strong id="remain-val" style="color:${remaining < 1000 ? '#fca5a5' : '#86efac'}">${remaining}</strong></span>
-        </div>
-        <div id="cost-display" style="display:none; margin-top:2px; font-size:0.75rem; text-align:right; opacity:0.7;">
-            Last Image Cost: <strong id="last-cost" style="color:#fbbf24">0</strong> Neurons
+        <div class="usage-bottom">
+          <span>Images: <strong id="img-count">${imgCount || 0}</strong></span>
+          <span>Remaining: <strong id="remain-val" class="${remaining < 1000 ? 'stat-warn' : 'stat-ok'}">${remaining}</strong></span>
         </div>
       </div>`;
   } else {
-      statusHtml = `<span style="color:#fca5a5; font-size:0.9rem;">⚠️ Database Not Connected (KV 'USAGE_DB' missing)</span>`;
+      statusHtml = `<div class="db-warn">⚠ KV database not connected — add USAGE_DB binding in wrangler.toml</div>`;
   }
 
   // WAF BYPASS
@@ -296,262 +293,437 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Image Generator</title>
 <link rel="icon" type="image/svg+xml" href="${faviconSVG}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root { --bg: #09090b; --card: #18181b; --border: #27272a; --accent: #6366f1; --accent-hover: #4f46e5; --text: #e4e4e7; --text-muted: #a1a1aa; --input-bg: #27272a; --error-bg: #450a0a; --error-text: #fca5a5; --code-bg: #111; --code-text: #ccc; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 20px; align-items: center; }
-  
-  /* --- CUSTOM SCROLLBAR --- */
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 5px; border: 2px solid var(--bg); }
-  ::-webkit-scrollbar-thumb:hover { background: #52525b; }
-  
-  .app-container { width: 100%; max-width: 1100px; display: grid; gap: 2rem; flex: 1; }
-  @media(min-width: 800px) { .app-container { grid-template-columns: 350px 1fr; align-items: start; } }
-  
-  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative; }
-  
-  /* --- HEADER & USAGE STYLING --- */
-  h1 { font-size: 1.65rem; font-weight: 800; color: #fff; display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 0.5rem; white-space: nowrap; }
-  .icon-img { width: 26px; height: 26px; display: inline-block; vertical-align: middle; }
-  .title-text { background: linear-gradient(to right, #6366f1, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  
-  .usage-badge { 
-      background: rgba(255,255,255,0.05); 
-      border: 1px solid var(--border); 
-      border-radius: 8px; 
-      padding: 12px 16px; 
-      margin-bottom: 1.5rem; 
-      color: var(--text-muted); 
-      display: flex; 
-      align-items: center;
-      gap: 15px;
+  /* ── DESIGN TOKENS ─────────────────────────────────── */
+  :root {
+    --bg:        #07070b;
+    --card:      #0e0e15;
+    --card2:     #12121a;
+    --border:    #1a1a26;
+    --border-hi: #28283a;
+    --accent:    #6366f1;
+    --accent2:   #8b5cf6;
+    --accent3:   #ec4899;
+    --text:      #e4e4f0;
+    --text-m:    #7878a0;
+    --text-d:    #38384e;
+    --in-bg:     #09090f;
+    --in-border: #1c1c28;
+    --err-bg:    #150308;
+    --err-text:  #f87171;
+    --code-bg:   #080810;
+    --code-text: #c0c0d8;
   }
-  
-  label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin: 16px 0 6px 0; }
-  input, select, textarea { width: 100%; max-width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; outline: none; transition: border 0.2s; }
-  textarea { resize: vertical; } 
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-  
-  .btn { width: 100%; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; gap: 8px; margin-top: 24px; transition: all 0.2s; }
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-muted); margin-top: 10px; }
-  .btn-secondary:hover { border-color: var(--accent); color: #fff; background: rgba(255,255,255,0.05); }
 
-  .result-area { min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; border-radius: 12px; padding: 20px; text-align: center; position: relative; }
-  img { max-width: 100%; max-height: 70vh; border-radius: 4px; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-  .caption { margin-top: 15px; color: var(--text-muted); font-size: 0.8rem; font-family: monospace; display: none; background: #111; padding: 6px 12px; border-radius: 20px; border: 1px solid #333; }
-  .caption span { color: var(--accent); font-weight: bold; }
+  /* ── RESET ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
 
-  .loader { border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s infinite; display: none; }
+  /* ── BASE ──────────────────────────────────────────── */
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 110% 55% at 50% -5%, rgba(99,102,241,0.09) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 40% at 90% 110%, rgba(139,92,246,0.05) 0%, transparent 55%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 20px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── SCROLLBAR ─────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #222230; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #303048; }
+
+  /* ── LAYOUT ────────────────────────────────────────── */
+  .app-container { width: 100%; max-width: 1140px; display: grid; gap: 18px; flex: 1; }
+  @media(min-width: 820px) { .app-container { grid-template-columns: 370px 1fr; align-items: start; } }
+
+  /* ── PANEL ─────────────────────────────────────────── */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 28px 26px;
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.4), rgba(168,85,247,0.4), rgba(236,72,153,0.2), transparent);
+    pointer-events: none;
+  }
+
+  /* ── APP HEADER ────────────────────────────────────── */
+  .app-header { text-align: center; margin-bottom: 24px; }
+  .app-header h1 {
+    font-size: 1.5rem; font-weight: 800; letter-spacing: -0.025em;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 5px;
+  }
+  .title-text {
+    background: linear-gradient(135deg, #818cf8 0%, #a78bfa 45%, #e879f9 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .app-subtitle { font-size: 0.73rem; color: var(--text-d); letter-spacing: 0.05em; font-weight: 500; text-transform: uppercase; }
+  .icon-img { width: 26px; height: 26px; flex-shrink: 0; }
+
+  /* ── USAGE BADGE ───────────────────────────────────── */
+  .usage-badge {
+    background: rgba(99,102,241,0.05);
+    border: 1px solid rgba(99,102,241,0.13);
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 24px;
+  }
+  .usage-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; font-size: 0.8rem; color: var(--text-m);
+  }
+  .usage-row strong { color: var(--text); font-weight: 600; }
+  .reset-timer { font-family: 'Courier New', monospace; font-size: 0.73rem; color: var(--text-d); letter-spacing: 0.04em; }
+  .usage-track { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+  .usage-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #a78bfa, #ec4899); border-radius: 2px; transition: width 0.7s ease; box-shadow: 0 0 10px rgba(99,102,241,0.5); }
+  .usage-bottom { display: flex; justify-content: space-between; margin-top: 7px; font-size: 0.72rem; color: var(--text-d); }
+  .usage-bottom strong { font-weight: 600; }
+  .stat-ok  { color: #34d399; }
+  .stat-warn { color: #f87171; }
+  .db-warn { font-size: 0.8rem; color: #f87171; padding: 10px 0; text-align: center; border: 1px solid rgba(248,113,113,0.15); border-radius: 10px; padding: 12px; margin-bottom: 20px; background: rgba(248,113,113,0.05); }
+
+  /* ── FIELD ─────────────────────────────────────────── */
+  .field { margin-top: 18px; }
+  .field-label {
+    display: block; font-size: 0.7rem; font-weight: 700;
+    color: var(--text-m); margin-bottom: 7px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  input, select, textarea {
+    width: 100%; background: var(--in-bg);
+    border: 1px solid var(--in-border);
+    color: var(--text); padding: 11px 14px;
+    border-radius: 11px; outline: none;
+    font-family: inherit; font-size: 0.88rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23606080' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+  textarea { resize: vertical; min-height: 82px; line-height: 1.55; }
+  input:focus, select:focus, textarea:focus {
+    border-color: rgba(99,102,241,0.55);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.09);
+  }
+  input::placeholder, textarea::placeholder { color: var(--text-d); }
+
+  /* ── MODEL + COST (main view) ──────────────────────── */
+  .model-cost-row { display: flex; align-items: flex-start; gap: 12px; margin-top: 18px; }
+  .model-wrap { flex: 1; min-width: 0; }
+  .cost-card {
+    flex-shrink: 0; min-width: 96px;
+    background: linear-gradient(145deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06));
+    border: 1px solid rgba(99,102,241,0.22);
+    border-radius: 11px; padding: 10px 12px; text-align: center;
+  }
+  .cost-card-label { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-d); margin-bottom: 4px; }
+  .cost-card-val   { font-size: 1.1rem; font-weight: 800; color: #fff; font-family: 'Courier New', monospace; line-height: 1; }
+  .cost-card-unit  { font-size: 0.6rem; color: var(--text-m); margin-top: 3px; font-weight: 500; letter-spacing: 0.04em; }
+
+  /* ── MODEL HINT ────────────────────────────────────── */
+  #model-desc {
+    font-size: 0.71rem; color: var(--text-m); margin-top: 7px;
+    padding: 5px 10px; background: rgba(255,255,255,0.02);
+    border-radius: 6px; border-left: 2px solid rgba(99,102,241,0.4);
+    line-height: 1.5;
+  }
+
+  /* ── CUSTOM DIMS ───────────────────────────────────── */
+  .dims-row { display: flex; gap: 10px; margin-top: 10px; }
+  .dims-row > div { flex: 1; }
+
+  /* ── ADVANCED SETTINGS ─────────────────────────────── */
+  .adv-details { margin-top: 18px; border: 1px solid var(--border); border-radius: 13px; overflow: hidden; }
+  .adv-summary {
+    list-style: none; display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 16px; cursor: pointer; user-select: none;
+    font-size: 0.78rem; font-weight: 600; color: var(--text-m);
+    transition: color 0.2s, background 0.2s;
+  }
+  .adv-summary::-webkit-details-marker { display: none; }
+  .adv-summary:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+  .adv-chevron { font-size: 0.65rem; transition: transform 0.2s; opacity: 0.5; }
+  .adv-details[open] .adv-chevron { transform: rotate(180deg); }
+  .adv-details[open] .adv-summary { border-bottom: 1px solid var(--border); color: var(--text); }
+  .adv-body { padding: 16px; background: rgba(0,0,0,0.18); }
+  .two-col { display: flex; gap: 12px; }
+  .two-col > div { flex: 1; }
+
+  /* ── CHECKBOX ──────────────────────────────────────── */
+  .checkbox-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 14px; padding: 10px 13px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border); border-radius: 9px; cursor: pointer;
+  }
+  .checkbox-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .checkbox-row label { font-size: 0.82rem; color: var(--text-m); cursor: pointer; line-height: 1.4; }
+
+  /* ── ERROR ─────────────────────────────────────────── */
+  #error-box {
+    display: none; margin-top: 16px;
+    background: var(--err-bg); color: var(--err-text);
+    border: 1px solid rgba(248,113,113,0.18);
+    padding: 12px 14px; border-radius: 11px; font-size: 0.84rem; line-height: 1.5;
+  }
+
+  /* ── BUTTONS ───────────────────────────────────────── */
+  .btn {
+    width: 100%; border: none; padding: 13px 20px;
+    border-radius: 12px; font-weight: 700; cursor: pointer;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    margin-top: 16px; transition: all 0.22s; font-size: 0.9rem;
+    font-family: inherit; letter-spacing: 0.01em;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #5a5cf0 0%, #7c4df0 55%, #9333ea 100%);
+    color: #fff;
+    box-shadow: 0 4px 22px rgba(99,102,241,0.32), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 6px 32px rgba(99,102,241,0.52), inset 0 1px 0 rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); box-shadow: 0 3px 14px rgba(99,102,241,0.35); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+  .btn-secondary {
+    background: transparent; color: var(--text-m);
+    border: 1px solid var(--border); margin-top: 10px; font-size: 0.82rem; font-weight: 600;
+  }
+  .btn-secondary:hover { border-color: var(--border-hi); color: var(--text); background: rgba(255,255,255,0.025); }
+
+  /* ── RESULT PANEL ──────────────────────────────────── */
+  .result-area {
+    min-height: 480px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #040408;
+    text-align: center; position: relative; padding: 32px;
+  }
+  .result-area::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: inherit;
+    background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(99,102,241,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── PLACEHOLDER ───────────────────────────────────── */
+  .placeholder-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .placeholder-wrap p { font-size: 0.83rem; color: var(--text-d); letter-spacing: 0.02em; }
+
+  /* ── RESULT IMAGE ──────────────────────────────────── */
+  #resultImg { max-width: 100%; max-height: 68vh; border-radius: 10px; display: none; box-shadow: 0 12px 50px rgba(0,0,0,0.75); }
+
+  /* ── LOADER ────────────────────────────────────────── */
+  .loader {
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 2px solid rgba(99,102,241,0.12);
+    border-top-color: #7c6ef8;
+    animation: spin 0.75s linear infinite; display: none;
+    box-shadow: 0 0 24px rgba(99,102,241,0.18);
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
-  
-  #error-box { display: none; background: var(--error-bg); color: var(--error-text); border: 1px solid #7f1d1d; padding: 12px; border-radius: 8px; margin-top: 20px; font-size: 0.9rem; text-align: left; }
-  
-  .checkbox-group { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
-  .checkbox-group input { width: auto; }
-  
-  footer { margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); width: 100%; max-width: 1100px; padding-top: 20px; padding-bottom: 20px; }
 
-  /* --- MODAL STYLES --- */
+  /* ── RESULT META ───────────────────────────────────── */
+  .result-meta {
+    margin-top: 15px; display: none;
+    font-size: 0.73rem; font-family: 'Courier New', monospace;
+    color: var(--text-m); background: rgba(255,255,255,0.03);
+    padding: 6px 18px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.06); text-align: center;
+  }
+  .meta-model { color: #a78bfa; } .meta-cost { color: #fbbf24; }
+
+  /* ── DOWNLOAD ──────────────────────────────────────── */
+  .dl-btn {
+    display: none; margin-top: 15px; padding: 10px 28px;
+    background: rgba(99,102,241,0.1); border-radius: 10px;
+    color: var(--text); text-decoration: none;
+    border: 1px solid rgba(99,102,241,0.22); font-size: 0.84rem;
+    font-weight: 600; transition: all 0.2s; font-family: inherit;
+  }
+  .dl-btn:hover { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.45); color: #fff; transform: translateY(-1px); }
+
+  /* ── FOOTER ────────────────────────────────────────── */
+  footer {
+    margin-top: 36px; text-align: center; color: var(--text-d);
+    font-size: 0.72rem; border-top: 1px solid var(--border);
+    width: 100%; max-width: 1140px;
+    padding: 20px 0; letter-spacing: 0.03em;
+  }
+
+  /* ── MODAL ─────────────────────────────────────────── */
   .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(5px);
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88); z-index: 1000;
+    justify-content: center; align-items: center;
+    backdrop-filter: blur(10px);
   }
   .modal-content {
-      background: var(--card);
-      width: 90%;
-      max-width: 800px;
-      max-height: 90vh;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    background: var(--card2); width: 92%; max-width: 820px;
+    max-height: 88vh; border-radius: 22px;
+    border: 1px solid var(--border); padding: 0;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.75); overflow: hidden;
   }
   .modal-header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    padding: 20px 26px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(99,102,241,0.04);
   }
-  .modal-header h3 { color: #fff; margin: 0; font-size: 1.2rem; }
-  .close-btn { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; padding: 0 8px; }
-  .close-btn:hover { color: #fff; }
-  
+  .modal-header h3 { color: var(--text); font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+  .close-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    color: var(--text-m); width: 30px; height: 30px; border-radius: 8px;
+    cursor: pointer; font-size: 1.1rem; display: flex; align-items: center;
+    justify-content: center; transition: all 0.2s; line-height: 1;
+  }
+  .close-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
   .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: #3f3f46 var(--card);
+    padding: 24px 26px; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: #222232 transparent;
   }
-  .modal-body::-webkit-scrollbar { width: 8px; }
-  .modal-body::-webkit-scrollbar-track { background: var(--card); }
-  .modal-body::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-  .modal-body::-webkit-scrollbar-thumb:hover { background: #52525b; }
+  .modal-body::-webkit-scrollbar { width: 5px; }
+  .modal-body::-webkit-scrollbar-track { background: transparent; }
+  .modal-body::-webkit-scrollbar-thumb { background: #222232; border-radius: 3px; }
+  .modal-body p { margin-bottom: 12px; font-size: 0.87rem; color: var(--text-m); line-height: 1.6; }
+  .modal-body a { color: #818cf8; text-decoration: none; }
+  .modal-body a:hover { text-decoration: underline; }
+  .modal-body code { background: rgba(99,102,241,0.09); padding: 2px 7px; border-radius: 4px; color: #a5b4fc; font-family: 'Courier New', monospace; font-size: 0.83em; border: 1px solid rgba(99,102,241,0.14); }
 
-  .modal-body p { margin-bottom: 12px; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
-  .modal-body code { background: var(--input-bg); padding: 2px 6px; border-radius: 4px; color: var(--accent); font-family: monospace; }
-  
-  .param-list { list-style: disc; padding-left: 20px; margin-bottom: 20px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
-  .param-list li { margin-bottom: 6px; }
-  .param-list strong { color: #e4e4e7; font-weight: 600; color: var(--accent); }
-
-  /* --- CODE BLOCK STYLES --- */
-  .code-wrapper { position: relative; margin-top: 15px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--code-bg); }
-  .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 32px;
-      height: 32px;
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: #aaa;
-      border-radius: 6px;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: all 0.2s;
-      z-index: 10;
-  }
-  .copy-btn:hover { background: rgba(255,255,255,0.2); color: white; }
-  
-  pre { margin: 0; padding: 20px; overflow-x: auto; }
-  code.language-json, code.language-bash { font-family: 'Fira Code', Consolas, monospace; font-size: 0.85rem; color: var(--code-text); }
-  .key { color: #fca5a5; } .str { color: #86efac; } .bool { color: #93c5fd; } .num { color: #fde047; } .comment { color: #6b7280; }
-
-  /* --- LIVE COST ESTIMATOR --- */
-  .cost-estimate {
-    display: flex; align-items: center; justify-content: space-between;
-    background: rgba(99,102,241,0.07);
-    border: 1px solid rgba(99,102,241,0.22);
-    border-radius: 6px; padding: 7px 12px; margin-top: 10px;
-    font-size: 0.8rem; color: var(--text-muted);
-  }
-  .cost-estimate strong { color: #fff; font-family: monospace; }
-  .cost-estimate .est-warn { color: #fca5a5; font-size: 0.75rem; }
-
-  /* --- MODEL DESCRIPTION HINT --- */
-  #model-desc {
-    font-size: 0.76rem; color: var(--text-muted); margin-top: 6px;
-    padding: 5px 9px; background: rgba(255,255,255,0.03);
-    border-radius: 5px; border-left: 2px solid var(--accent);
-    line-height: 1.4;
-  }
-
-  /* --- PRICING TABLE (in modal) --- */
-  .pricing-table { width: 100%; border-collapse: collapse; margin: 10px 0 22px 0; font-size: 0.82rem; }
-  .pricing-table th { background: var(--input-bg); color: var(--text-muted); text-align: left; padding: 8px 12px; font-weight: 600; border-bottom: 1px solid var(--border); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
-  .pricing-table td { padding: 9px 12px; border-bottom: 1px solid rgba(39,39,42,0.7); color: var(--text-muted); vertical-align: top; line-height: 1.45; }
+  /* ── PRICING TABLE ─────────────────────────────────── */
+  .pricing-table { width: 100%; border-collapse: collapse; margin: 10px 0 22px; font-size: 0.81rem; }
+  .pricing-table th { background: rgba(255,255,255,0.03); color: var(--text-m); text-align: left; padding: 9px 14px; font-weight: 700; border-bottom: 1px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pricing-table td { padding: 10px 14px; border-bottom: 1px solid rgba(26,26,38,0.9); color: var(--text-m); vertical-align: top; line-height: 1.5; }
   .pricing-table tr:last-child td { border-bottom: none; }
-  .pricing-table td:first-child { color: var(--text); font-weight: 500; white-space: nowrap; }
-  .pricing-table .rate { color: #fbbf24; font-family: monospace; font-size: 0.78rem; display: block; margin-top: 2px; }
+  .pricing-table td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+  .pricing-table .rate { color: #fbbf24; font-family: 'Courier New', monospace; font-size: 0.77rem; display: block; margin-top: 2px; }
 
-  /* --- MODAL SECTION TITLES --- */
-  .modal-section { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 22px 0 8px 0; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  /* ── MODAL SECTION HEADINGS ────────────────────────── */
+  .modal-section { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(129,140,248,0.9); margin: 24px 0 10px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
 
-  /* --- RESULT META --- */
-  .result-meta { margin-top: 12px; display: none; font-size: 0.76rem; font-family: monospace; color: var(--text-muted); background: #111; padding: 6px 16px; border-radius: 20px; border: 1px solid #2a2a2a; text-align: center; line-height: 1.8; }
-  .result-meta .meta-model { color: #a78bfa; } .result-meta .meta-cost { color: #fbbf24; }
+  /* ── PARAM LIST ────────────────────────────────────── */
+  .param-list { list-style: none; padding: 0; margin-bottom: 20px; }
+  .param-list li { font-size: 0.86rem; color: var(--text-m); padding: 8px 0; border-bottom: 1px solid rgba(26,26,38,0.6); line-height: 1.55; }
+  .param-list li:last-child { border-bottom: none; }
+  .param-list strong { color: #c4b5fd; font-weight: 600; font-family: 'Courier New', monospace; font-size: 0.84em; }
 
-  /* --- IMPROVED DOWNLOAD BUTTON --- */
-  .dl-btn {
-    display: none; margin-top: 14px; padding: 10px 26px;
-    background: rgba(99,102,241,0.12); border-radius: 8px;
-    color: var(--text); text-decoration: none;
-    border: 1px solid rgba(99,102,241,0.3); font-size: 0.88rem;
-    font-weight: 500; transition: all 0.2s;
-  }
-  .dl-btn:hover { background: rgba(99,102,241,0.25); border-color: var(--accent); color: #fff; }
-
-  /* --- PLACEHOLDER ICON --- */
-  .placeholder-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; color: #444; }
-  .placeholder-wrap svg { opacity: 0.35; }
-  .placeholder-wrap p { font-size: 0.9rem; }
+  /* ── CODE BLOCKS ───────────────────────────────────── */
+  .code-wrapper { position: relative; margin: 12px 0 18px; border: 1px solid var(--border); border-radius: 11px; overflow: hidden; background: var(--code-bg); }
+  .copy-btn { position: absolute; top: 9px; right: 9px; width: 29px; height: 29px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.07); color: var(--text-m); border-radius: 7px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s; z-index: 10; }
+  .copy-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  pre { margin: 0; padding: 20px 22px; overflow-x: auto; }
+  code.language-json, code.language-bash { font-family: 'Courier New', Consolas, monospace; font-size: 0.82rem; color: var(--code-text); line-height: 1.6; }
+  .key { color: #f9a8d4; } .str { color: #86efac; } .bool { color: #93c5fd; } .num { color: #fde047; } .comment { color: #404058; }
 </style>
 </head>
 <body>
 
 <div class="app-container">
-  <div class="panel">
-    <h1>
-      <span class="title-text">AI Image Generator</span>
-      <img src="${headerIconSVG}" class="icon-img" alt="Magic" /> 
-    </h1>
-    
-    <div class="usage-badge">
-       ${statusHtml}
-    </div>
-    
-    <label>API Key</label>
-    <input type="password" id="apikey" placeholder="Enter Secret Key" />
-    
-    <label>Prompt</label>
-    <textarea id="prompt" rows="3" placeholder="A futuristic city with flying cars..."></textarea>
-    
-    <label>Dimensions</label>
-    <select id="aspectRatio" onchange="updateDims(); estimateCost();">
-      <option value="1:1" selected>1:1 Square (768x768)</option>
-      <option value="16:9">16:9 Landscape</option>
-      <option value="9:16">9:16 Portrait</option>
-      <option value="21:9">21:9 Ultrawide</option>
-      <option value="custom">Custom</option>
-    </select>
 
-    <div id="dims" style="display:none; margin-top: 10px; background: #222; padding: 10px; border-radius: 8px;">
-       <div style="display:flex; gap:10px">
-         <div style="flex:1"><label>Width</label><select id="width" onchange="estimateCost()">${generateSizeOptions()}</select></div>
-         <div style="flex:1"><label>Height</label><select id="height" onchange="estimateCost()">${generateSizeOptions()}</select></div>
-       </div>
+  <!-- ── LEFT PANEL: CONTROLS ──────────────────────── -->
+  <div class="panel">
+
+    <div class="app-header">
+      <h1>
+        <img src="${headerIconSVG}" class="icon-img" alt="" />
+        <span class="title-text">AI Image Generator</span>
+      </h1>
+      <p class="app-subtitle">Powered by Cloudflare Workers AI</p>
     </div>
-    
-    <details style="margin-top:20px; color:#aaa; cursor:pointer;" open>
-      <summary style="font-size:0.85rem; font-weight:600; color:var(--text-muted); user-select:none;">Advanced Settings</summary>
-      <div style="padding-top:10px;">
-        <label>Model</label>
+
+    ${statusHtml}
+
+    <div class="field">
+      <label class="field-label" for="apikey">API Key</label>
+      <input type="password" id="apikey" placeholder="Enter your secret key" autocomplete="current-password" />
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="prompt">Prompt</label>
+      <textarea id="prompt" rows="3" placeholder="Describe the image you want to create..."></textarea>
+    </div>
+
+    <!-- Model selector + live cost card in main view -->
+    <div class="model-cost-row">
+      <div class="model-wrap">
+        <label class="field-label" for="model">Model</label>
         <select id="model" onchange="estimateCost()">
-          <option value="flux-2-klein-4b" selected>Flux-2 Klein 4B — High Quality (Default)</option>
+          <option value="flux-2-klein-4b" selected>Flux-2 Klein 4B — High Quality</option>
           <option value="flux-2-klein-9b">Flux-2 Klein 9B — Highest Quality</option>
-          <option value="flux-1-schnell">Flux-1 Schnell — Fastest Generation</option>
+          <option value="flux-1-schnell">Flux-1 Schnell — Fastest</option>
         </select>
         <div id="model-desc"></div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-card-label">Est. Cost</div>
+        <div class="cost-card-val" id="est-neurons">—</div>
+        <div class="cost-card-unit">neurons</div>
+      </div>
+    </div>
 
-        <div class="cost-estimate">
-          <span>Estimated Cost</span>
-          <span><strong id="est-neurons">—</strong> neurons</span>
+    <div class="field">
+      <label class="field-label" for="aspectRatio">Dimensions</label>
+      <select id="aspectRatio" onchange="updateDims(); estimateCost();">
+        <option value="1:1" selected>1:1 &nbsp; Square &nbsp;(768 × 768)</option>
+        <option value="16:9">16:9 &nbsp; Landscape &nbsp;(1152 × 640)</option>
+        <option value="9:16">9:16 &nbsp; Portrait &nbsp;(640 × 1152)</option>
+        <option value="21:9">21:9 &nbsp; Ultrawide &nbsp;(1280 × 576)</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+
+    <div id="dims" style="display:none;">
+      <div class="dims-row">
+        <div><label class="field-label">Width</label><select id="width" onchange="estimateCost()">${generateSizeOptions()}</select></div>
+        <div><label class="field-label">Height</label><select id="height" onchange="estimateCost()">${generateSizeOptions()}</select></div>
+      </div>
+    </div>
+
+    <details class="adv-details">
+      <summary class="adv-summary">Advanced Settings <span class="adv-chevron">▾</span></summary>
+      <div class="adv-body">
+        <div class="two-col">
+          <div>
+            <label class="field-label" for="seed">Seed</label>
+            <input type="number" id="seed" placeholder="Random" />
+          </div>
+          <div>
+            <label class="field-label" for="safety">Safety</label>
+            <select id="safety">
+              <option value="">Default</option>
+              <option value="1">1 — Strict</option>
+              <option value="2">2 — Medium</option>
+              <option value="3">3 — Loose</option>
+            </select>
+          </div>
         </div>
-
-        <div style="display: flex; gap: 10px; margin-top:4px;">
-             <div style="flex:1">
-                <label>Seed</label><input type="number" id="seed" placeholder="Random">
-             </div>
-             <div style="flex:1">
-                <label>Safety Tolerance</label>
-                <select id="safety">
-                  <option value="">Default</option>
-                  <option value="1">Strict (1)</option>
-                  <option value="2">Medium (2)</option>
-                  <option value="3">Loose (3)</option>
-                </select>
-             </div>
-        </div>
-
-        <div class="checkbox-group">
-            <input type="checkbox" id="photoreal">
-            <span>Enable Photorealistic Enhancer</span>
+        <div class="checkbox-row" onclick="document.getElementById('photoreal').click()">
+          <input type="checkbox" id="photoreal" onclick="event.stopPropagation()" />
+          <label for="photoreal">Photorealistic Enhancer — appends quality keywords to prompt</label>
         </div>
       </div>
     </details>
@@ -560,18 +732,31 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
 
     <button class="btn btn-primary" onclick="generate()" id="genBtn">Generate Image</button>
     <button class="btn btn-secondary" onclick="openModal()">API Documentation &amp; Pricing</button>
+
   </div>
 
+  <!-- ── RIGHT PANEL: RESULT ───────────────────────── -->
   <div class="panel result-area">
     <div id="placeholder" class="placeholder-wrap">
-      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <defs>
+          <linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#ec4899" stop-opacity="0.25"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="18" height="18" rx="3" stroke="url(#pg)" stroke-width="1.1"/>
+        <circle cx="8.5" cy="8.5" r="1.5" stroke="url(#pg)" stroke-width="1.1"/>
+        <path d="m21 15-5-5L5 21" stroke="url(#pg)" stroke-width="1.1"/>
+      </svg>
       <p>Your generated artwork will appear here</p>
     </div>
     <div class="loader" id="loader"></div>
     <img id="resultImg" />
     <div id="resultMeta" class="result-meta"></div>
-    <a id="dlBtn" class="dl-btn" href="#" download="image.png">⤓ Download High-Res Image</a>
+    <a id="dlBtn" class="dl-btn" href="#" download="image.png">⤓ Download Image</a>
   </div>
+
 </div>
 
 <div id="api-modal" class="modal-overlay" onclick="closeModal(event)">
@@ -797,7 +982,7 @@ async function fetchStats() {
             const remaining = Math.max(data.limit - data.neurons, 0).toFixed(2);
             const remainEl = document.getElementById('remain-val');
             remainEl.innerText = remaining;
-            remainEl.style.color = remaining < 1000 ? '#fca5a5' : '#86efac';
+            remainEl.className = remaining < 1000 ? 'stat-warn' : 'stat-ok';
             
             // Update Count
             if(document.getElementById('img-count')) {
