@@ -14,6 +14,7 @@ export default {
     const MODELS = {
       "default": "@cf/black-forest-labs/flux-2-klein-4b",
       "flux-2-klein-4b": "@cf/black-forest-labs/flux-2-klein-4b",
+      "flux-2-klein-9b": "@cf/black-forest-labs/flux-2-klein-9b",
       "flux-1-schnell": "@cf/black-forest-labs/flux-1-schnell"
     };
 
@@ -33,7 +34,7 @@ export default {
     function calculateCost(model, width, height, steps) {
       // 1. Calculate number of 512x512 tiles (exact fraction)
       const tiles = (width * height) / (512 * 512);
-      
+
       // 2. Pricing Logic (Floats kept for accuracy)
       if (model.includes("schnell")) {
         // Flux-1 Schnell: ~9.6 neurons/step + ~4.8 neurons/tile
@@ -41,9 +42,14 @@ export default {
         const tileCost = 4.8;
         const numSteps = steps || 4;
         return (numSteps * stepCost) + (tiles * tileCost);
-      } 
+      }
+      else if (model.includes("9b")) {
+        // Flux-2 Klein 9B: ~58.61 neurons per output tile (larger model, ~2.25x cost of 4B)
+        const tileCost = 58.61;
+        return tiles * tileCost;
+      }
       else {
-        // Flux-2 Klein: ~26.05 neurons per output tile
+        // Flux-2 Klein 4B: ~26.05 neurons per output tile
         const tileCost = 26.05;
         return tiles * tileCost;
       }
@@ -467,6 +473,7 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
         <label>Model</label>
         <select id="model">
           <option value="flux-2-klein-4b" selected>Flux-2 Klein 4B (High Quality Default)</option>
+          <option value="flux-2-klein-9b">Flux-2 Klein 9B (Highest Quality)</option>
           <option value="flux-1-schnell">Flux-1 Schnell (Faster)</option>
         </select>
         
@@ -524,7 +531,7 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
             <p><strong>Request Parameters:</strong></p>
             <ul class="param-list">
                 <li><strong>prompt</strong> (Required): Text description of the image to generate.</li>
-                <li><strong>model</strong>: <code>flux-2-klein-4b</code> (Default) or <code>flux-1-schnell</code>.</li>
+                <li><strong>model</strong>: <code>flux-2-klein-4b</code> (Default), <code>flux-2-klein-9b</code> (Highest Quality), or <code>flux-1-schnell</code> (Faster).</li>
                 <li><strong>photorealistic</strong>: <code>true</code> or <code>false</code>. Appends quality-enhancing keywords.</li>
                 <li><strong>width</strong> / <strong>height</strong>: Integer (256-1280). Must be a multiple of 32.</li>
                 <li><strong>seed</strong>: Integer. Use for reproducible results. Defaults to random.</li>
