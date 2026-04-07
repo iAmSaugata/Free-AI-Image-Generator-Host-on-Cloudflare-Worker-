@@ -309,9 +309,9 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
     --accent3:   #ec4899;
     --text:      #e4e4f0;
     --text-m:    #7878a0;
-    --text-d:    #38384e;
-    --in-bg:     #09090f;
-    --in-border: #1c1c28;
+    --text-d:    #52527a;
+    --in-bg:     #1b1b28;
+    --in-border: #2e2e44;
     --err-bg:    #150308;
     --err-text:  #f87171;
     --code-bg:   #080810;
