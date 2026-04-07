@@ -569,11 +569,17 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
 
   /* ── FOOTER ────────────────────────────────────────── */
   footer {
-    margin-top: 36px; text-align: center; color: var(--text-d);
-    font-size: 0.72rem; border-top: 1px solid var(--border);
+    margin-top: 36px; text-align: center; color: var(--text-m);
+    font-size: 0.78rem; border-top: 1px solid var(--border);
     width: 100%; max-width: 1140px;
-    padding: 20px 0; letter-spacing: 0.03em;
+    padding: 22px 0; letter-spacing: 0.02em;
   }
+  footer a {
+    color: var(--accent2); text-decoration: none; font-weight: 600;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: #c4b5fd; text-decoration: underline; }
+  .footer-sep { color: var(--text-d); margin: 0 8px; }
 
   /* ── MODAL ─────────────────────────────────────────── */
   .modal-overlay {
@@ -649,10 +655,9 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
 
     <div class="app-header">
       <h1>
-        <img src="${headerIconSVG}" class="icon-img" alt="" />
         <span class="title-text">AI Image Generator</span>
+        <img src="${headerIconSVG}" class="icon-img" alt="" />
       </h1>
-      <p class="app-subtitle">Powered by Cloudflare Workers AI</p>
     </div>
 
     ${statusHtml}
@@ -864,7 +869,9 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
 </div>
 
 <footer>
-    TechnoChat.IN™ | © iAmSAugata
+  <a href="https://technochat.in" target="_blank" rel="noopener noreferrer">TechnoChat.IN</a>™
+  <span class="footer-sep">·</span>
+  © iAmSaugata
 </footer>
 
 <script>
