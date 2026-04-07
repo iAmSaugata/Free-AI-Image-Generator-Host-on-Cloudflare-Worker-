@@ -433,8 +433,7 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
   input::placeholder, textarea::placeholder { color: var(--text-d); }
 
   /* ── MODEL + COST (main view) ──────────────────────── */
-  .model-cost-row { display: flex; align-items: flex-start; gap: 12px; margin-top: 18px; }
-  .model-wrap { flex: 1; min-width: 0; }
+  .model-cost-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
   .cost-card {
     flex-shrink: 0; min-width: 96px;
     background: linear-gradient(145deg, rgba(85,88,232,0.07), rgba(124,58,237,0.04));
@@ -591,16 +590,16 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
   }
   /* ── MODAL: DARK THEME (independent of page light theme) ── */
   .modal-content {
-    background: #13131e; width: 92%; max-width: 820px;
+    background: #0f0f1a !important; width: 92%; max-width: 820px;
     max-height: 88vh; border-radius: 22px;
-    border: 1px solid #22223a; padding: 0;
+    border: 1px solid #252538; padding: 0;
     display: flex; flex-direction: column;
-    box-shadow: 0 30px 90px rgba(0,0,0,0.8); overflow: hidden;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.85); overflow: hidden;
   }
   .modal-header {
-    padding: 20px 26px; border-bottom: 1px solid #22223a;
+    padding: 20px 26px; border-bottom: 1px solid #252538;
     display: flex; justify-content: space-between; align-items: center;
-    background: rgba(99,102,241,0.07);
+    background: rgba(99,102,241,0.08) !important;
   }
   .modal-header h3 { color: #e8e8f8; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
   .close-btn {
@@ -612,6 +611,7 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
   .close-btn:hover { background: rgba(255,255,255,0.13); color: #e8e8f8; }
   .modal-body {
     padding: 24px 26px; overflow-y: auto;
+    background: #0f0f1a !important;
     scrollbar-width: thin; scrollbar-color: #2a2a42 transparent;
   }
   .modal-body::-webkit-scrollbar { width: 5px; }
@@ -675,21 +675,21 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
     </div>
 
     <!-- Model selector + live cost card in main view -->
-    <div class="model-cost-row">
-      <div class="model-wrap">
-        <label class="field-label" for="model">Model</label>
-        <select id="model" onchange="estimateCost()">
+    <div class="field">
+      <label class="field-label" for="model">Model</label>
+      <div class="model-cost-row">
+        <select id="model" onchange="estimateCost()" style="flex:1; min-width:0;">
           <option value="flux-2-klein-4b" selected>Flux-2 Klein 4B — High Quality</option>
           <option value="flux-2-klein-9b">Flux-2 Klein 9B — Highest Quality</option>
           <option value="flux-1-schnell">Flux-1 Schnell — Fastest</option>
         </select>
-        <div id="model-desc"></div>
+        <div class="cost-card">
+          <div class="cost-card-label">Est. Cost</div>
+          <div class="cost-card-val" id="est-neurons">—</div>
+          <div class="cost-card-unit">neurons</div>
+        </div>
       </div>
-      <div class="cost-card">
-        <div class="cost-card-label">Est. Cost</div>
-        <div class="cost-card-val" id="est-neurons">—</div>
-        <div class="cost-card-unit">neurons</div>
-      </div>
+      <div id="model-desc"></div>
     </div>
 
     <div class="field">
