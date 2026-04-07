@@ -518,7 +518,7 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
        </div>
     </div>
     
-    <details style="margin-top:20px; color:#aaa; cursor:pointer;" open>
+    <details style="margin-top:20px; color:#aaa; cursor:pointer;">
       <summary style="font-size:0.85rem; font-weight:600; color:var(--text-muted); user-select:none;">Advanced Settings</summary>
       <div style="padding-top:10px;">
         <label>Model</label>
