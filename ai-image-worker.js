@@ -589,62 +589,63 @@ function getHTML(usageCount, imgCount, dailyLimit, dbConnected) {
     justify-content: center; align-items: center;
     backdrop-filter: blur(10px);
   }
+  /* ── MODAL: DARK THEME (independent of page light theme) ── */
   .modal-content {
-    background: var(--card2); width: 92%; max-width: 820px;
+    background: #13131e; width: 92%; max-width: 820px;
     max-height: 88vh; border-radius: 22px;
-    border: 1px solid var(--border); padding: 0;
+    border: 1px solid #22223a; padding: 0;
     display: flex; flex-direction: column;
-    box-shadow: 0 30px 90px rgba(0,0,0,0.75); overflow: hidden;
+    box-shadow: 0 30px 90px rgba(0,0,0,0.8); overflow: hidden;
   }
   .modal-header {
-    padding: 20px 26px; border-bottom: 1px solid var(--border);
+    padding: 20px 26px; border-bottom: 1px solid #22223a;
     display: flex; justify-content: space-between; align-items: center;
-    background: rgba(85,88,232,0.03);
+    background: rgba(99,102,241,0.07);
   }
-  .modal-header h3 { color: var(--text); font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
+  .modal-header h3 { color: #e8e8f8; font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
   .close-btn {
-    background: rgba(0,0,0,0.05); border: 1px solid var(--border);
-    color: var(--text-m); width: 30px; height: 30px; border-radius: 8px;
+    background: rgba(255,255,255,0.07); border: 1px solid #2e2e48;
+    color: #7878a0; width: 30px; height: 30px; border-radius: 8px;
     cursor: pointer; font-size: 1.1rem; display: flex; align-items: center;
     justify-content: center; transition: all 0.2s; line-height: 1;
   }
-  .close-btn:hover { background: rgba(0,0,0,0.09); color: var(--text); }
+  .close-btn:hover { background: rgba(255,255,255,0.13); color: #e8e8f8; }
   .modal-body {
     padding: 24px 26px; overflow-y: auto;
-    scrollbar-width: thin; scrollbar-color: #222232 transparent;
+    scrollbar-width: thin; scrollbar-color: #2a2a42 transparent;
   }
   .modal-body::-webkit-scrollbar { width: 5px; }
   .modal-body::-webkit-scrollbar-track { background: transparent; }
-  .modal-body::-webkit-scrollbar-thumb { background: #222232; border-radius: 3px; }
-  .modal-body p { margin-bottom: 12px; font-size: 0.87rem; color: var(--text-m); line-height: 1.6; }
-  .modal-body a { color: var(--accent); text-decoration: none; }
-  .modal-body a:hover { text-decoration: underline; color: var(--accent2); }
-  .modal-body code { background: rgba(85,88,232,0.07); padding: 2px 7px; border-radius: 4px; color: #4338ca; font-family: 'Courier New', monospace; font-size: 0.83em; border: 1px solid rgba(85,88,232,0.15); }
+  .modal-body::-webkit-scrollbar-thumb { background: #2a2a42; border-radius: 3px; }
+  .modal-body p { margin-bottom: 12px; font-size: 0.87rem; color: #8888aa; line-height: 1.6; }
+  .modal-body a { color: #818cf8; text-decoration: none; }
+  .modal-body a:hover { text-decoration: underline; color: #a78bfa; }
+  .modal-body code { background: rgba(99,102,241,0.12); padding: 2px 7px; border-radius: 4px; color: #a5b4fc; font-family: 'Courier New', monospace; font-size: 0.83em; border: 1px solid rgba(99,102,241,0.2); }
 
-  /* ── PRICING TABLE ─────────────────────────────────── */
+  /* ── PRICING TABLE (dark) ──────────────────────────── */
   .pricing-table { width: 100%; border-collapse: collapse; margin: 10px 0 22px; font-size: 0.81rem; }
-  .pricing-table th { background: rgba(85,88,232,0.05); color: var(--text-m); text-align: left; padding: 9px 14px; font-weight: 700; border-bottom: 1px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
-  .pricing-table td { padding: 10px 14px; border-bottom: 1px solid rgba(26,26,38,0.9); color: var(--text-m); vertical-align: top; line-height: 1.5; }
+  .pricing-table th { background: rgba(255,255,255,0.04); color: #7878a0; text-align: left; padding: 9px 14px; font-weight: 700; border-bottom: 1px solid #22223a; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pricing-table td { padding: 10px 14px; border-bottom: 1px solid #1e1e32; color: #8888aa; vertical-align: top; line-height: 1.5; }
   .pricing-table tr:last-child td { border-bottom: none; }
-  .pricing-table td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+  .pricing-table td:first-child { color: #e8e8f8; font-weight: 600; white-space: nowrap; }
   .pricing-table .rate { color: #fbbf24; font-family: 'Courier New', monospace; font-size: 0.77rem; display: block; margin-top: 2px; }
 
-  /* ── MODAL SECTION HEADINGS ────────────────────────── */
-  .modal-section { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin: 24px 0 10px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
+  /* ── MODAL SECTION HEADINGS (dark) ────────────────── */
+  .modal-section { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #818cf8; margin: 24px 0 10px; padding-bottom: 7px; border-bottom: 1px solid #22223a; }
 
-  /* ── PARAM LIST ────────────────────────────────────── */
+  /* ── PARAM LIST (dark) ─────────────────────────────── */
   .param-list { list-style: none; padding: 0; margin-bottom: 20px; }
-  .param-list li { font-size: 0.86rem; color: var(--text-m); padding: 8px 0; border-bottom: 1px solid rgba(26,26,38,0.6); line-height: 1.55; }
+  .param-list li { font-size: 0.86rem; color: #8888aa; padding: 8px 0; border-bottom: 1px solid #1e1e32; line-height: 1.55; }
   .param-list li:last-child { border-bottom: none; }
-  .param-list strong { color: var(--accent); font-weight: 600; font-family: 'Courier New', monospace; font-size: 0.84em; }
+  .param-list strong { color: #a5b4fc; font-weight: 600; font-family: 'Courier New', monospace; font-size: 0.84em; }
 
-  /* ── CODE BLOCKS ───────────────────────────────────── */
-  .code-wrapper { position: relative; margin: 12px 0 18px; border: 1px solid var(--border); border-radius: 11px; overflow: hidden; background: var(--code-bg); }
-  .copy-btn { position: absolute; top: 9px; right: 9px; width: 29px; height: 29px; background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.1); color: var(--text-m); border-radius: 7px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s; z-index: 10; }
-  .copy-btn:hover { background: rgba(0,0,0,0.12); color: var(--text); }
+  /* ── CODE BLOCKS (dark) ────────────────────────────── */
+  .code-wrapper { position: relative; margin: 12px 0 18px; border: 1px solid #22223a; border-radius: 11px; overflow: hidden; background: #0d0d18; }
+  .copy-btn { position: absolute; top: 9px; right: 9px; width: 29px; height: 29px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08); color: #7878a0; border-radius: 7px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.2s; z-index: 10; }
+  .copy-btn:hover { background: rgba(255,255,255,0.14); color: #e8e8f8; }
   pre { margin: 0; padding: 20px 22px; overflow-x: auto; }
-  code.language-json, code.language-bash { font-family: 'Courier New', Consolas, monospace; font-size: 0.82rem; color: var(--code-text); line-height: 1.6; }
-  .key { color: #be185d; } .str { color: #15803d; } .bool { color: #1d4ed8; } .num { color: #b45309; } .comment { color: #9ca3af; }
+  code.language-json, code.language-bash { font-family: 'Courier New', Consolas, monospace; font-size: 0.82rem; color: #c0c0d8; line-height: 1.6; }
+  .key { color: #f9a8d4; } .str { color: #86efac; } .bool { color: #93c5fd; } .num { color: #fde047; } .comment { color: #404060; }
 </style>
 </head>
 <body>
